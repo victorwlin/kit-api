@@ -34,13 +34,9 @@ func auth(r *http.Request) bool {
 		if key[0] == lock {
 			return true
 		} else {
-			fmt.Println("key:", key[0])
-			fmt.Println("lock:", lock)
 			return false
 		}
 	} else {
-		fmt.Println("queries:", queries)
-		fmt.Println("lock:", lock)
 		return false
 	}
 }
@@ -202,7 +198,7 @@ func friendFunc(w http.ResponseWriter, r *http.Request) {
 
 				// check if friend exists
 				if friendExists(db, friendParam) {
-					query := fmt.Sprintf("UPDATE victor SET `group`='%s', `desired_freq`=%d, `last_contact`='%s' WHERE `friend_name`='%s'", editFriend.Group, editFriend.DesiredFreq, editFriend.LastContact, editFriend.FriendName)
+					query := fmt.Sprintf(`UPDATE "victor" SET "group"='%s', "desired_freq"=%d, "last_contact"='%s' WHERE "friend_name"='%s'`, editFriend.Group, editFriend.DesiredFreq, editFriend.LastContact, editFriend.FriendName)
 					_, err := db.Query(query)
 					if err != nil {
 						panic(err.Error())
