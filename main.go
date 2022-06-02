@@ -34,9 +34,13 @@ func auth(r *http.Request) bool {
 		if key[0] == lock {
 			return true
 		} else {
+			fmt.Println("key:", key[0])
+			fmt.Println("lock:", lock)
 			return false
 		}
 	} else {
+		fmt.Println("queries:", queries)
+		fmt.Println("lock:", lock)
 		return false
 	}
 }
