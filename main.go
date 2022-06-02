@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -21,7 +22,32 @@ type friend struct {
 	LastContact string `json:"LastContact"`
 }
 
+var (
+	envErr = godotenv.Load(".env")
+	lock   = os.Getenv("LOCK")
+)
+
+func auth(r *http.Request) bool {
+	queries := r.URL.Query()
+
+	if key, exists := queries["key"]; exists {
+		if key[0] == lock {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
 func getFriends(w http.ResponseWriter, r *http.Request) {
+	if !auth(r) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("401 - Invalid Key"))
+		return
+	}
+
 	// establish connection to database
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -53,6 +79,12 @@ func getFriends(w http.ResponseWriter, r *http.Request) {
 }
 
 func friendFunc(w http.ResponseWriter, r *http.Request) {
+	if !auth(r) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("401 - Invalid Key"))
+		return
+	}
+
 	params := mux.Vars(r)
 	friendParam := params["friend"]
 
@@ -204,10 +236,6 @@ func friendExists(db *sql.DB, friend string) (exists bool) {
 	return exists
 }
 
-func helloWorld(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World")
-}
-
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -216,7 +244,6 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", helloWorld)
 	router.HandleFunc("/api/v1/friends", getFriends).Methods("GET")
 	router.HandleFunc("/api/v1/friends/{friend}", friendFunc).Methods("GET", "PUT", "POST", "DELETE")
 
